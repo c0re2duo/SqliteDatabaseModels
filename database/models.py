@@ -1,12 +1,18 @@
-from database.types import Model, TitleField, TextField, CountField, ImageField, IdField
+from database.types import Model, TitleColumn, TextColumn, CountColumn, ImageColumn, IdColumn, StaticModel, DynamicModel
 
 
 # Simple custom model like in Django
-class Product(Model):
-    # table_name is important variable
-    table_name = 'users'
+class Shop(StaticModel):
+    table_name = 'shops'
 
-    # fields
-    user_id = IdField()
-    name = TitleField(text_size=32)
-    description = TextField()
+    asda_id = IdColumn()
+    name = TitleColumn()
+    desc = TextColumn()
+
+
+class Category(DynamicModel):
+    table_name = "products_in_category_{}"
+
+    # category_id = IdColumn()
+    name = TitleColumn()
+    count = CountColumn()

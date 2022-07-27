@@ -2,7 +2,7 @@ import os
 
 from . import database_handler as db_handler
 
-from .types import Model
+from .types import Model, extract_column_data
 from .models import *
 
 
@@ -17,24 +17,20 @@ def disconnect_database():
 
 
 def register_models():
-    models_classes_names = [cls.__name__ for cls in Model.__subclasses__()]
-    for model_class_name in models_classes_names:
-        model_obj = globals()[model_class_name]
-        models_classes.append(model_obj)
-        model_obj.get_fields()
+    static_models_classes_names = [cls.__name__ for cls in StaticModel.__subclasses__()]
+    dynamic_models_classes_names = [cls.__name__ for cls in DynamicModel.__subclasses__()]
+    for model_class_name in static_models_classes_names:
+        model_class = globals()[model_class_name]
+        models_classes.append(model_class)
+        model_class.get_table_columns()
+    for model_class_name in dynamic_models_classes_names:
+        model_class = globals()[model_class_name]
+        model_class.get_table_columns()
 
 
 # Coming soon
 def migrate():
     pass
-
-
-def get_columns(model: Model) -> tuple:
-    fields = model.get_fields()
-    columns: tuple = ()
-    for field in fields:
-        columns += (f'{field} {fields[field].get_column_data()}',)
-    return columns
 
 
 # This method calling from ititializing if database file not exist
@@ -48,8 +44,8 @@ def regenerate_database():
         pass
     connect_database()
     for model in models_classes:
-        # print(get_columns(model))
-        db_handler.create_table(model.table_name, get_columns(model))
+        print(model.table_name, extract_column_data(model))
+        db_handler.create_table(model.table_name, extract_column_data(model))
     disconnect_database()
 
 

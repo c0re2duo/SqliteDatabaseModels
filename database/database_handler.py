@@ -10,6 +10,7 @@ connection: sqlite3.Connection
 cursor: sqlite3.Cursor
 
 
+
 def connect_database():
     if os.path.exists('database/database.db'):
         global connection, cursor
@@ -142,10 +143,11 @@ def get_last_writes(table: str, row: int):
     ''', (), row)
 
 
-def get_all_writes(table: str) -> sqlite3.Row:
+def get_all_writes(table: str, order_by: str | None = None) -> sqlite3.Row:
     return request_get(f'''
     SELECT *
     FROM {table}
+    {f"ORDER BY {order_by}" if order_by else ""}
     ''', (), CursorReturnEnum.ALL_WRITES)
 
 
@@ -178,3 +180,4 @@ def check_write(table: str, key_name: str, key_value):
         return True
     except NoValueError:
         return False
+
