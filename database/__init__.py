@@ -44,7 +44,6 @@ def regenerate_database():
         pass
     connect_database()
     for model in models_classes:
-        print(model.table_name, extract_column_data(model))
         db_handler.create_table(model.table_name, extract_column_data(model))
     disconnect_database()
 

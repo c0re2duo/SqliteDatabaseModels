@@ -2,10 +2,10 @@ from database.types import Model, TitleColumn, TextColumn, CountColumn, ImageCol
 
 
 # Simple custom model like in Django
+# If there is no IdField column, script automatically creates IdField id
 class Shop(StaticModel):
     table_name = 'shops'
 
-    asda_id = IdColumn()
     name = TitleColumn()
     desc = TextColumn()
 
@@ -13,6 +13,7 @@ class Shop(StaticModel):
 class Category(DynamicModel):
     table_name = "products_in_category_{}"
 
-    # category_id = IdColumn()
+    # There are custom id column, that id will not create
+    some_other_id = IdColumn()
     name = TitleColumn()
-    count = CountColumn()
+    some_count = CountColumn()

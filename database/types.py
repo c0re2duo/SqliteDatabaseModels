@@ -5,7 +5,7 @@ from . import database_handler as db_handler
 
 
 # DatabaseField parent class
-# In daught class you need to setting get_column_data for get right data for generate table
+# In child class you need to setting get_column_data for get right data for generate table
 class Column:
     def get_column_data(self) -> str:
         pass
@@ -202,54 +202,53 @@ class DynamicModel(Model):
         columns = extract_column_data(cls)
         db_handler.create_table(cls.get_table_name(table_param), columns)
 
-    # asd
     @classmethod
     def get_write(cls, table_param: str | int, key_id: int):
         return db_handler.get_write(cls.get_table_name(table_param), cls.key_column, key_id)
 
     @classmethod
-    def get_key(cls, key_name: str, key_value):
-        return db_handler.get_field(cls.table_name, cls.key_column, key_name, key_value)
+    def get_key(cls, table_param: str | int, key_name: str, key_value):
+        return db_handler.get_field(cls.get_table_name(table_param), cls.key_column, key_name, key_value)
 
     @classmethod
-    def get_field(cls, key_value, field_name):
-        return db_handler.get_field(cls.table_name, field_name, cls.key_column, key_value)
+    def get_field(cls, table_param: str | int, key_value, field_name):
+        return db_handler.get_field(cls.get_table_name(table_param), field_name, cls.key_column, key_value)
 
     @classmethod
-    def get_all_writes(cls, order_by: str | None = None):
-        return db_handler.get_all_writes(cls.table_name, order_by)
+    def get_all_writes(cls, table_param: str | int, order_by: str | None = None):
+        return db_handler.get_all_writes(cls.get_table_name(table_param), order_by)
 
     @classmethod
-    def get_last_writes(cls, row):
-        return db_handler.get_last_writes(cls.table_name, row)
+    def get_last_writes(cls, table_param: str | int, row):
+        return db_handler.get_last_writes(cls.get_table_name(table_param), row)
 
     @classmethod
-    def get_column(cls, field: str, duplicates: bool = True):
-        return db_handler.get_column(cls.table_name, field, duplicates)
+    def get_column(cls, table_param: str | int, field: str, duplicates: bool = True):
+        return db_handler.get_column(cls.get_table_name(table_param), field, duplicates)
 
     @classmethod
-    def get_columns(cls, *columns_names):
-        return db_handler.get_columns(cls.table_name, *columns_names)
+    def get_columns(cls, table_param: str | int, *columns_names):
+        return db_handler.get_columns(cls.get_table_name(table_param), *columns_names)
 
     @classmethod
-    def get_writes_with_condition(cls, field_name: str, key_name: str, key_value):
-        return db_handler.get_writes_with_condition(cls.table_name, field_name, key_name, key_value)
+    def get_writes_with_condition(cls, table_param: str | int, field_name: str, key_name: str, key_value):
+        return db_handler.get_writes_with_condition(cls.get_table_name(table_param), field_name, key_name, key_value)
 
     @classmethod
-    def add_write(cls, *values):
+    def add_write(cls, table_param: str | int, *values):
         if cls.key_column == 'id':
-            db_handler.add_write(cls.table_name, (None,) + values)
+            db_handler.add_write(cls.get_table_name(table_param), (None,) + values)
         else:
-            db_handler.add_write(cls.table_name, values)
+            db_handler.add_write(cls.get_table_name(table_param), values)
 
     @classmethod
-    def set_field(cls, key, field_name: str, value):
-        db_handler.set_field(cls.table_name, field_name, value, cls.key_column, key)
+    def set_field(cls, table_param: str | int, key, field_name: str, value):
+        db_handler.set_field(cls.get_table_name(table_param), field_name, value, cls.key_column, key)
 
     @classmethod
-    def delete_write(cls, key):
-        db_handler.delete_write(cls.table_name, cls.key_column, key)
+    def delete_write(cls, table_param: str | int, key):
+        db_handler.delete_write(cls.get_table_name(table_param), cls.key_column, key)
 
     @classmethod
-    def check_write(cls, key_value):
-        return db_handler.check_write(cls.table_name, cls.key_column, key_value)
+    def check_write(cls, table_param: str | int, key_value):
+        return db_handler.check_write(cls.get_table_name(table_param), cls.key_column, key_value)

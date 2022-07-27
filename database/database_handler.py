@@ -3,12 +3,12 @@ import sqlite3
 from enum import Enum
 
 
-# Database handing methods
+# This script is database handing methods
 
 
+# connection to sqlite
 connection: sqlite3.Connection
 cursor: sqlite3.Cursor
-
 
 
 def connect_database():
@@ -26,6 +26,7 @@ def disconnect_database():
     connection.close()
 
 
+# Enum for select how many writes sqlite must return
 class CursorReturnEnum(Enum):
     ONE_VALUE = -1
     ALL_WRITES = 0
@@ -33,6 +34,7 @@ class CursorReturnEnum(Enum):
     ONE_WRITE = 2
 
 
+# This exception appear when sqlite cursor don't find any values in request
 class NoValueError(Exception):
     def __init__(self, **kwargs):
         self.params = kwargs
@@ -41,6 +43,7 @@ class NoValueError(Exception):
         return f'Не получилось получить значение из базы данных {self.params}'
 
 
+# Method for extract dict from sqlite row type
 def dict_factory(row):
     d = {}
     for idx, col in enumerate(cursor.description):
@@ -48,6 +51,7 @@ def dict_factory(row):
     return d
 
 
+# Basic function for make get requests
 def request_get(request: str, values: tuple = (), return_values_count: int | CursorReturnEnum = CursorReturnEnum.ALL_WRITES):
     cursor.execute(request, values)
     if return_values_count == CursorReturnEnum.ONE_VALUE:
@@ -74,11 +78,13 @@ def request_get(request: str, values: tuple = (), return_values_count: int | Cur
         return cursor.fetchmany(return_values_count)
 
 
+# The same function but in the end makes commit
 def request_set(request: str, values: tuple = ()):
     cursor.execute(request, values)
     connection.commit()
 
 
+# Next you see the basic functions for handing database
 def check_table(table: str):
     if request_get(f'''
     SELECT name
