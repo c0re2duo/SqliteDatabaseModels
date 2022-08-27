@@ -2,7 +2,7 @@ import os
 
 from . import database_handler as db_handler
 
-from .types import Model, extract_column_data
+from .types import Model, extract_field_create_data, DynamicModel
 from .models import *
 
 
@@ -22,10 +22,10 @@ def register_models():
     for model_class_name in static_models_classes_names:
         model_class = globals()[model_class_name]
         models_classes.append(model_class)
-        model_class.get_table_columns()
+        model_class.get_table_fields()
     for model_class_name in dynamic_models_classes_names:
         model_class = globals()[model_class_name]
-        model_class.get_table_columns()
+        model_class.get_table_fields()
 
 
 # Coming soon
@@ -44,7 +44,7 @@ def regenerate_database():
         pass
     connect_database()
     for model in models_classes:
-        db_handler.create_table(model.table_name, extract_column_data(model))
+        db_handler.create_table(model.table_name, extract_field_create_data(model))
     disconnect_database()
 
 

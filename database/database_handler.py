@@ -103,6 +103,12 @@ def create_table(table_name: str, columns: tuple = ()):
     request_set(request)
 
 
+def delete_table(table_name: str):
+    request_set(f'''
+    DROP TABLE {table_name}
+''')
+
+
 def get_field(table: str, field_name: str, key_name: str, key_value):
     return request_get(f'''
     SELECT {field_name}
@@ -157,12 +163,20 @@ def get_all_writes(table: str, order_by: str | None = None) -> sqlite3.Row:
     ''', (), CursorReturnEnum.ALL_WRITES)
 
 
-def get_writes_with_condition(table: str, field_name, key_name: str, key_value):
+def get_fields_with_condition(table: str, field_name, key_name: str, key_value):
     return request_get(f'''
     SELECT {field_name}
     FROM {table}
     WHERE {key_name} = ?
     ''', (key_value,), CursorReturnEnum.ALL_FIELDS)
+
+
+def get_writes_with_condition(table: str, key_name: str, key_value):
+    return request_get(f'''
+    SELECT *
+    FROM {table}
+    WHERE {key_name} = ?
+    ''', (key_value,), CursorReturnEnum.ALL_WRITES)
 
 
 def add_write(table: str, values: tuple):
@@ -187,3 +201,6 @@ def check_write(table: str, key_name: str, key_value):
     except NoValueError:
         return False
 
+
+def get_last_rowid():
+    return cursor.lastrowid

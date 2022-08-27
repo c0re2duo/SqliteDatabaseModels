@@ -4,153 +4,68 @@ from typing import Type
 from . import database_handler as db_handler
 
 
-# DatabaseField parent class
-# In child class you need to setting get_column_data for get right data for generate table
-class Column:
-    def get_column_data(self) -> str:
-        pass
-
-
-# Class extends DatabaseField
-class IdColumn(Column):
-    def get_column_data(self):
-        return 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT'
-
-
-class TitleColumn(Column):
-    # You can set custom settings for Field
-    def __init__(self, text_size=32):
-        self.text_size = text_size
-
-    def get_column_data(self):
-        return f'VARCHAR ({self.text_size}) NOT NULL'
-
-
-class TextColumn(Column):
-    def get_column_data(self):
-        return f'VARCHAR (1000) NOT NULL'
-
-
-class CountColumn(Column):
-    def get_column_data(self):
-        return f'INTEGER'
-
-
-class BoolColumn(Column):
-    def get_column_data(self):
-        return f'BOOL NOT NULL'
-
-
-class ImageColumn(Column):
-    text_size = 16
-
-    def get_column_data(self):
-        return f'VARCHAR ({self.text_size}) NOT NULL'
-
-
-class DateColumn(Column):
-    def get_column_data(self):
-        return f'DATETIME NOT NULL'
-
-
 # Parent class for all Models
+from .exceptions import IdIsAlreadyAdded
+from .fields.base_fields import IdField, Field
+
+
 class Model:
+    # table_name is necesarry parameter of all models
     table_name: str = None
+    primary_key_field: str | None = None
 
     # id is IdField by default
     # If you set your IdField in custom model, this IdField don't use
     # key_column is id by default
     # Same, if you set custom IdField, key_column sets your key column
-    key_column: str = 'id'
+
+    # key_column: str = 'id'
 
     @classmethod
-    def get_table_columns(cls):
+    def get_table_fields(cls):
         class_dict = cls.__dict__
-        columns: dict[str: Column] = {}
-        custom_key_column = None
-        for column in class_dict:
-            if isinstance(class_dict[column], Column):
-                columns[column] = class_dict[column]
-                if isinstance(class_dict[column], IdColumn):
-                    custom_key_column = column
-        if custom_key_column:
-            cls.key_column = custom_key_column
-            columns = {custom_key_column: IdColumn()} | columns
-        else:
-            columns = {'id': IdColumn()} | columns
-        return columns
+        fields: dict[str: Field] = {}
 
-    # Next you see a default class methods for get data from database
-    # @classmethod
-    # @abstractmethod
-    # def get_write(cls):
-    #     pass
-    #
-    # @classmethod
-    # def get_spec_write_key(cls, key_name: str, key_value):
-    #     pass
-    #
-    # @classmethod
-    # def get_field(cls, key_value, field_name):
-    #     pass
-    #
-    # @classmethod
-    # def get_all_writes(cls, order_by: str | None = None):
-    #     pass
-    #
-    # @classmethod
-    # def get_last_writes(cls, row):
-    #     pass
-    #
-    # @classmethod
-    # def get_column(cls, field: str, duplicates: bool = True):
-    #     pass
-    #
-    # @classmethod
-    # def get_columns(cls, *columns_names):
-    #     pass
-    #
-    # @classmethod
-    # def get_writes_with_condition(cls, field_name: str, key_name: str, key_value):
-    #     pass
-    #
-    # @classmethod
-    # def add_write(cls, *values):
-    #     pass
-    #
-    # @classmethod
-    # def set_field(cls, key, field_name: str, value):
-    #     pass
-    #
-    # @classmethod
-    # def delete_write(cls, key):
-    #     pass
-    #
-    # @classmethod
-    # def check_write(cls, key_value):
-    #     pass
+        used_custom_id_field: bool = False
+        for field in class_dict:
+            if isinstance(class_dict[field], Field):
+                fields[field] = class_dict[field]
+                if isinstance(class_dict[field], IdField):
+                    used_custom_id_field = True
+
+        if not used_custom_id_field:
+            if cls.primary_key_field and cls.primary_key_field != 'id':
+                fields[cls.primary_key_field].primary_key = True
+            else:
+                fields = {'id': IdField()} | fields
+                if cls.primary_key_field == 'id':
+                    raise IdIsAlreadyAdded
+        return fields
 
 
-def extract_column_data(model: Type[Model]) -> tuple:
-    fields = model.get_table_columns()
-    columns: tuple = ()
+def extract_field_create_data(model: Type[Model]) -> tuple:
+    fields = model.get_table_fields()
+    # print(fields)
+    field_create_data: tuple = ()
     for field in fields:
-        columns += (f'{field} {fields[field].get_column_data()}',)
-    return columns
+        field_create_data += (f'{field} {fields[field].get_field_create_data()}',)
+    # print(field_create_data)
+    return field_create_data
 
 
 class StaticModel(Model):
+    # methods for simple handing database
     @classmethod
     def get_write(cls, key_id: int):
-        return db_handler.get_write(cls.table_name, cls.key_column, key_id)
+        return db_handler.get_write(cls.table_name, cls.primary_key_field, key_id)
 
     @classmethod
     def get_key(cls, key_name: str, key_value):
-        return db_handler.get_field(cls.table_name, cls.key_column, key_name, key_value)
+        return db_handler.get_field(cls.table_name, cls.primary_key_field, key_name, key_value)
 
     @classmethod
     def get_field(cls, key_value, field_name):
-        return db_handler.get_field(cls.table_name, field_name, cls.key_column, key_value)
+        return db_handler.get_field(cls.table_name, field_name, cls.primary_key_field, key_value)
 
     @classmethod
     def get_all_writes(cls, order_by: str | None = None):
@@ -169,27 +84,27 @@ class StaticModel(Model):
         return db_handler.get_columns(cls.table_name, *columns_names)
 
     @classmethod
-    def get_writes_with_condition(cls, field_name: str, key_name: str, key_value):
-        return db_handler.get_writes_with_condition(cls.table_name, field_name, key_name, key_value)
+    def get_writes_with_condition(cls, key_name: str, key_value):
+        return db_handler.get_writes_with_condition(cls.table_name, key_name, key_value)
 
     @classmethod
     def add_write(cls, *values):
-        if cls.key_column == 'id':
+        if cls.primary_key_field == 'id':
             db_handler.add_write(cls.table_name, (None,) + values)
         else:
             db_handler.add_write(cls.table_name, values)
 
     @classmethod
     def set_field(cls, key, field_name: str, value):
-        db_handler.set_field(cls.table_name, field_name, value, cls.key_column, key)
+        db_handler.set_field(cls.table_name, field_name, value, cls.primary_key_field, key)
 
     @classmethod
     def delete_write(cls, key):
-        db_handler.delete_write(cls.table_name, cls.key_column, key)
+        db_handler.delete_write(cls.table_name, cls.primary_key_field, key)
 
     @classmethod
     def check_write(cls, key_value):
-        return db_handler.check_write(cls.table_name, cls.key_column, key_value)
+        return db_handler.check_write(cls.table_name, cls.primary_key_field, key_value)
 
 
 class DynamicModel(Model):
@@ -199,20 +114,20 @@ class DynamicModel(Model):
 
     @classmethod
     def create(cls, table_param: str | int):
-        columns = extract_column_data(cls)
+        columns = extract_field_create_data(cls)
         db_handler.create_table(cls.get_table_name(table_param), columns)
 
     @classmethod
     def get_write(cls, table_param: str | int, key_id: int):
-        return db_handler.get_write(cls.get_table_name(table_param), cls.key_column, key_id)
+        return db_handler.get_write(cls.get_table_name(table_param), cls.primary_key_field, key_id)
 
     @classmethod
     def get_key(cls, table_param: str | int, key_name: str, key_value):
-        return db_handler.get_field(cls.get_table_name(table_param), cls.key_column, key_name, key_value)
+        return db_handler.get_field(cls.get_table_name(table_param), cls.primary_key_field, key_name, key_value)
 
     @classmethod
     def get_field(cls, table_param: str | int, key_value, field_name):
-        return db_handler.get_field(cls.get_table_name(table_param), field_name, cls.key_column, key_value)
+        return db_handler.get_field(cls.get_table_name(table_param), field_name, cls.primary_key_field, key_value)
 
     @classmethod
     def get_all_writes(cls, table_param: str | int, order_by: str | None = None):
@@ -231,24 +146,32 @@ class DynamicModel(Model):
         return db_handler.get_columns(cls.get_table_name(table_param), *columns_names)
 
     @classmethod
-    def get_writes_with_condition(cls, table_param: str | int, field_name: str, key_name: str, key_value):
-        return db_handler.get_writes_with_condition(cls.get_table_name(table_param), field_name, key_name, key_value)
+    def get_writes_with_condition(cls, table_param: str | int, key_name: str, key_value):
+        return db_handler.get_writes_with_condition(cls.get_table_name(table_param), key_name, key_value)
+
+    @classmethod
+    def get_fields_with_condition(cls, table_param: str | int, field_name: str, key_name: str, key_value):
+        return db_handler.get_fields_with_condition(cls.get_table_name(table_param), field_name, key_name, key_value)
 
     @classmethod
     def add_write(cls, table_param: str | int, *values):
-        if cls.key_column == 'id':
+        if cls.primary_key_field == 'id':
             db_handler.add_write(cls.get_table_name(table_param), (None,) + values)
         else:
             db_handler.add_write(cls.get_table_name(table_param), values)
 
     @classmethod
     def set_field(cls, table_param: str | int, key, field_name: str, value):
-        db_handler.set_field(cls.get_table_name(table_param), field_name, value, cls.key_column, key)
+        db_handler.set_field(cls.get_table_name(table_param), field_name, value, cls.primary_key_field, key)
 
     @classmethod
     def delete_write(cls, table_param: str | int, key):
-        db_handler.delete_write(cls.get_table_name(table_param), cls.key_column, key)
+        db_handler.delete_write(cls.get_table_name(table_param), cls.primary_key_field, key)
 
     @classmethod
     def check_write(cls, table_param: str | int, key_value):
-        return db_handler.check_write(cls.get_table_name(table_param), cls.key_column, key_value)
+        return db_handler.check_write(cls.get_table_name(table_param), cls.primary_key_field, key_value)
+
+    @classmethod
+    def drop(cls, table_param: str | int):
+        db_handler.delete_table(cls.get_table_name(table_param))
