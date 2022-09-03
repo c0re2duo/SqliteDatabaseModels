@@ -1,4 +1,4 @@
-from database.fields.base_fields import BigTextField, SmallTextField, IntegerField
+from database.fields.base_fields import BigTextField, SmallTextField, IntegerField, DateTimeField
 from database.types import StaticModel, DynamicModel
 
 
@@ -15,12 +15,13 @@ class Article(StaticModel):
     title = SmallTextField(max_text_len=64)
     text = BigTextField()
     likes = IntegerField()
+    create_datetime = DateTimeField()
 
 
 # Simple dynamic model
-class Comment(DynamicModel):
-    # in this table name we use "{}" for indicate place for table parameter
-    table_name = 'commentaries_of_article_{}'
-
-    text = BigTextField()
-    chat_name = SmallTextField(max_text_len=32)
+# class Comment(DynamicModel):
+#     # in this table name we use "{}" for indicate place for table parameter
+#     table_name = 'commentaries_of_article_{}'
+#
+#     text = BigTextField()
+#     chat_name = SmallTextField(max_text_len=32)

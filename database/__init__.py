@@ -19,13 +19,14 @@ def disconnect_database():
 def register_models():
     static_models_classes_names = [cls.__name__ for cls in StaticModel.__subclasses__()]
     dynamic_models_classes_names = [cls.__name__ for cls in DynamicModel.__subclasses__()]
-    for model_class_name in static_models_classes_names:
+    for model_class_name in static_models_classes_names + dynamic_models_classes_names:
+        print(model_class_name)
         model_class = globals()[model_class_name]
-        models_classes.append(model_class)
-        model_class.get_table_fields()
-    for model_class_name in dynamic_models_classes_names:
-        model_class = globals()[model_class_name]
-        model_class.get_table_fields()
+        model_class.register_fields()
+        if model_class_name in static_models_classes_names:
+            static_models_classes.append(model_class)
+        elif model_class_name in dynamic_models_classes_names:
+            dynamic_models_classes.append(model_class)
 
 
 # Coming soon
@@ -35,7 +36,7 @@ def migrate():
 
 # This method calling from ititializing if database file not exist
 def regenerate_database():
-    # print('regenerate')
+    print('regenerate')
     try:
         os.remove('database/database.db')
     except FileNotFoundError:
@@ -43,14 +44,17 @@ def regenerate_database():
     with open('database/database.db', 'w'):
         pass
     connect_database()
-    for model in models_classes:
+    for model in static_models_classes:
         db_handler.create_table(model.table_name, extract_field_create_data(model))
     disconnect_database()
 
 
 # if __name__ != '__main__':
-models_classes = []
+static_models_classes = []
+dynamic_models_classes = []
 register_models()
 if not connect_database():
     regenerate_database()
     connect_database()
+
+# print(models_classes[0].title.field_create_date)

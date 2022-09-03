@@ -140,7 +140,7 @@ def get_columns(table: str, *columns_names):
     ''')
 
 
-def get_write(table: str, key_name: str, key_value) -> sqlite3.Row:
+def get_write(table: str, key_name: str, key_value) -> dict:
     return request_get(f'''
     SELECT *
     FROM {table}
