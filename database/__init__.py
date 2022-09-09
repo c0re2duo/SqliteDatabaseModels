@@ -20,7 +20,7 @@ def register_models():
     static_models_classes_names = [cls.__name__ for cls in StaticModel.__subclasses__()]
     dynamic_models_classes_names = [cls.__name__ for cls in DynamicModel.__subclasses__()]
     for model_class_name in static_models_classes_names + dynamic_models_classes_names:
-        print(model_class_name)
+        # print(model_class_name)
         model_class = globals()[model_class_name]
         model_class.register_fields()
         if model_class_name in static_models_classes_names:
@@ -36,7 +36,7 @@ def migrate():
 
 # This method calling from ititializing if database file not exist
 def regenerate_database():
-    print('regenerate')
+    # print('regenerate')
     try:
         os.remove('database/database.db')
     except FileNotFoundError:

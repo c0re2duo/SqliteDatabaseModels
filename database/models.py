@@ -19,9 +19,10 @@ class Article(StaticModel):
 
 
 # Simple dynamic model
-# class Comment(DynamicModel):
-#     # in this table name we use "{}" for indicate place for table parameter
-#     table_name = 'commentaries_of_article_{}'
-#
-#     text = BigTextField()
-#     chat_name = SmallTextField(max_text_len=32)
+class Comments(DynamicModel):
+    # in this table name we use "{}" for indicate place for table parameter
+    table_name = 'commentaries_of_article_{}'
+
+    comment_text = BigTextField()
+    chat_name = SmallTextField(max_text_len=32)
+    create_datetime = DateTimeField()

@@ -24,7 +24,8 @@ class Field:
         return self.field_create_date
 
     @staticmethod
-    def get_filter_data(database_value):
+    def filter_data_from_db(database_value):
+        # NOT CHANGED means this filter don't change value from database
         return FilterReturnValues.NOT_CHANGED
 
 
@@ -59,7 +60,7 @@ class DateTimeField(Field):
     field_create_date = 'DATETIME NOT NULL'
 
     @staticmethod
-    def get_filter_data(database_value: str):
+    def filter_data_from_db(database_value: str):
         try:
             date, time = database_value.split(' ')
             year, month, day = map(int, date.split('-'))

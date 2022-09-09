@@ -75,7 +75,7 @@ def request_get(request: str, values: tuple = (), return_values_count: int | Cur
             values.append(value[0])
         return values
     else:
-        return cursor.fetchmany(return_values_count)
+        return list(map(dict_factory, cursor.fetchmany(return_values_count)))
 
 
 # The same function but in the end makes commit
