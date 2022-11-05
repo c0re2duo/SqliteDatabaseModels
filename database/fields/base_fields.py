@@ -16,11 +16,14 @@ class FilterValueError(Exception):
 # In child class you need to setting field_create_data for get right data in generate table
 class Field:
     primary_key: bool = False
+    autoincrement: bool = False
     field_create_date: str = ''
 
     def get_field_create_data(self) -> str:
         if self.primary_key:
-            self.field_create_date += ' PRIMARY KEY AUTOINCREMENT'
+            self.field_create_date += ' PRIMARY KEY'
+        if self.autoincrement:
+            self.field_create_date += ' AUTOINCREMENT'
         return self.field_create_date
 
     @staticmethod
@@ -40,6 +43,7 @@ class SmallTextField(Field):
     field_create_date = 'VARCHAR ({}) NOT NULL'
 
     def __init__(self, max_text_len=32):
+        # print('init', max_text_len)
         self.max_text_len = max_text_len
         self.field_create_date = self.field_create_date.format(str(self.max_text_len))
 

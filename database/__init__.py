@@ -6,6 +6,10 @@ from .types import Model, extract_field_create_data, DynamicModel
 from .models import *
 
 
+static_models_classes = []
+dynamic_models_classes = []
+
+
 def connect_database():
     # print('connect')
     return db_handler.connect_database()
@@ -49,12 +53,8 @@ def regenerate_database():
     disconnect_database()
 
 
-# if __name__ != '__main__':
-static_models_classes = []
-dynamic_models_classes = []
-register_models()
-if not connect_database():
-    regenerate_database()
-    connect_database()
-
-# print(models_classes[0].title.field_create_date)
+def start_database():
+    register_models()
+    if not connect_database():
+        regenerate_database()
+        connect_database()

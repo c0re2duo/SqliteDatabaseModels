@@ -15,14 +15,11 @@ class Model:
     table_name: str = None
     primary_key_field: str | None = 'id'
     fields: dict[str: Field] = {}
-    # field_classes = {'title': Sma}
 
     # id is IdField by default
     # If you set your IdField in custom model, this IdField don't use
     # key_column is id by default
     # Same, if you set custom IdField, key_column sets your key column
-
-    # key_column: str = 'id'
 
     @classmethod
     def skip_through_get_filter(cls, values: dict):
@@ -43,33 +40,36 @@ class Model:
         # print(cls)
         # print(cls.fields)
         cls.fields = {}
+
         used_custom_id_field: bool = False
+        if cls.primary_key_field and cls.primary_key_field != 'id':
+            used_custom_id_field = True
+
         for field in class_dict:
+            # checking for field
             if isinstance(class_dict[field], Field):
+                # adding to class fields
                 cls.fields[field] = class_dict[field]
+                # checking model has custom primary_key_field and it's not IdField()
+                if used_custom_id_field and field == cls.primary_key_field:
+                    # set primary_key flag to field
+                    class_dict[field].primary_key = True
+                # the same check, but IdField()
                 if isinstance(class_dict[field], IdField):
+                    # adding IdField() field
+                    cls.fields = {field: IdField()} | cls.fields
                     used_custom_id_field = True
-        # print(cls.fields)
 
+        # if no custom primary key, we add IdField() as id in start of fields
         if not used_custom_id_field:
-            if cls.primary_key_field and cls.primary_key_field != 'id':
-                cls.fields[cls.primary_key_field].primary_key = True
-            else:
-                cls.fields = {'id': IdField()} | cls.fields
-                # if cls.primary_key_field == 'id':
-                #     raise IdIsAlreadyAdded
-
-        # print('load_fields ', cls.fields)
-        # return fields
+            cls.fields = {'id': IdField()} | cls.fields
 
 
 def extract_field_create_data(model: Type[Model]) -> tuple:
-    # print('fields:', model.fields)
     fields = model.fields
     field_create_data: tuple = ()
     for field in fields:
         field_create_data += (f'{field} {fields[field].get_field_create_data()}',)
-    # print(field_create_data)
     return field_create_data
 
 

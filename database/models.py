@@ -1,4 +1,4 @@
-from database.fields.base_fields import BigTextField, SmallTextField, IntegerField, DateTimeField
+from database.fields.base_fields import BigTextField, SmallTextField, IntegerField, DateTimeField, IdField
 from database.types import StaticModel, DynamicModel
 
 
@@ -11,7 +11,8 @@ class Article(StaticModel):
     primary_key_field = 'article_id'
 
     # fields
-    article_id = IntegerField()
+    article_id = SmallTextField(max_text_len=16)
+    # article_id = IdField()
     title = SmallTextField(max_text_len=64)
     text = BigTextField()
     likes = IntegerField()
